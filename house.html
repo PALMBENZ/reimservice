@@ -114,6 +114,22 @@
       flex:1;
     }
 
+    .label.blue-text{
+      color:blue;
+    }
+
+    .label.green-text{
+      color:green;
+    }
+
+    .label.purple-text{
+      color:purple;
+    }
+
+    .label.brown-text{
+      color:brown;
+    }
+
     .legend{
       margin-top:20px;
       font-size:14px;
@@ -162,14 +178,14 @@ const tasks = [
   { id:6, time:"15:00", label:"Happy for free green hour -> clothes washer is started" },
   { id:7, time:"15:40", label:"happy for free green hour -> dishwasher is started" },
   { id:8, time:"16:10", label:"happy for free green hour -> clothes washer is started" },
-  {id:11, time:"16:45", label:"induction is switched off" },
-  {id:12, time:"16:45", label:"oven is switched off" },
-  {id:13, time:"16:45", label:"Bubu's room heater is switched off" },
-  {id:14, time:"16:45", label:"Izabella's room heater is switched off" },
-  {id:15, time:"16:46", label:"Parental room heater is switched off" },
-  {id:16, time:"16:46", label:"Corridor heater is switched off" },
-  {id:17, time:"16:46", label:"Toilet heater is switched off" },
-  {id:18, time:"16:46", label:"Shower room clothes heater is switched off" },
+  { id:11, time:"16:45", label:"induction is switched off" },
+  { id:12, time:"16:45", label:"oven is switched off" },
+  { id:13, time:"16:45", label:"Bubu's room heater is switched off" },
+  { id:14, time:"16:45", label:"Izabella's room heater is switched off" },
+  { id:15, time:"16:46", label:"Parental room heater is switched off" },
+  { id:16, time:"16:46", label:"Corridor heater is switched off" },
+  { id:17, time:"16:46", label:"Toilet heater is switched off" },
+  { id:18, time:"16:46", label:"Shower room clothes heater is switched off" },
   { id:10, time:"18:00", label:"double check fridge is well closed and all carbohydrates are well hidden in garage and/or closed boxes" }
 ];
 
@@ -181,8 +197,8 @@ function nowMinutes(){
 }
 
 function timeToMinutes(t){
-  const [h,m]=t.split(":");
-  return h*60 + +m;
+  const [h,m] = t.split(":");
+  return (+h)*60 + (+m);
 }
 
 function renderClock(){
@@ -194,41 +210,50 @@ function renderClock(){
     now.toLocaleTimeString("fr-FR");
 }
 
+function getLabelClass(id){
+  if ([1,2,3,4,5].includes(id)) return "blue-text";
+  if ([6,7,8].includes(id)) return "green-text";
+  if (id >= 11 && id <= 18) return "purple-text";
+  if ([9,10].includes(id)) return "brown-text";
+  return "";
+}
+
 function renderTasks(){
-  taskList.innerHTML="";
+  taskList.innerHTML = "";
 
-  tasks.forEach(t=>{
-    const row=document.createElement("div");
-    const checked=localStorage.getItem(t.id)==="1";
+  tasks.forEach(t => {
+    const row = document.createElement("div");
+    const checked = localStorage.getItem(t.id) === "1";
 
-    let color="gray";
-    if(checked) color="green";
-    else if(nowMinutes()>timeToMinutes(t.time)) color="red";
+    let color = "gray";
+    if (checked) color = "green";
+    else if (nowMinutes() > timeToMinutes(t.time)) color = "red";
 
-    row.className="task "+color;
+    row.className = "task " + color;
 
-    const cb=document.createElement("input");
-    cb.type="checkbox";
-    cb.checked=checked;
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = checked;
 
-    cb.onchange=()=>{
-      localStorage.setItem(t.id, cb.checked?"1":"0");
+    cb.onchange = () => {
+      localStorage.setItem(t.id, cb.checked ? "1" : "0");
       renderTasks();
     };
 
-    row.innerHTML += `<div class="time">${t.time}</div>
-                      <div class="label">${t.label}</div>`;
+    row.innerHTML = `
+      <div class="time">${t.time}</div>
+      <div class="label ${getLabelClass(t.id)}">${t.label}</div>
+    `;
 
     row.prepend(cb);
-
     taskList.appendChild(row);
   });
 }
 
-setInterval(()=>{
+setInterval(() => {
   renderClock();
   renderTasks();
-},1000);
+}, 1000);
 
 renderClock();
 renderTasks();
