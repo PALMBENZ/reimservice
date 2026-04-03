@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily checklist for house management</title>
+
+  <style>
+    :root{
+      --bg:#f4f6f8;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --gray:#9ca3af;
+      --green:#16a34a;
+      --red:#dc2626;
+      --border:#e5e7eb;
+      --shadow:0 10px 30px rgba(0,0,0,0.08);
+      --radius:18px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Arial, Helvetica, sans-serif;
+      background:linear-gradient(180deg,#eef2f7 0%, #f9fafb 100%);
+      color:var(--text);
+      min-height:100vh;
+      padding:24px;
+    }
+
+    .container{
+      max-width:850px;
+      margin:0 auto;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:24px;
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:30px;
+    }
+
+    .subtitle{
+      margin:0 0 18px;
+      color:var(--muted);
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:20px;
+      padding:16px;
+      border:1px solid var(--border);
+      border-radius:14px;
+      background:#f9fafb;
+    }
+
+    .badge{
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:700;
+      background:#eef2ff;
+      color:#1e3a8a;
+      margin-right:8px;
+    }
+
+    .status-line{
+      margin:18px 0;
+      font-weight:700;
+      color:var(--green);
+    }
+
+    .task-list{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .task{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      padding:16px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:#fff;
+    }
+
+    .task.gray{ background:#f3f4f6; }
+    .task.green{ background:#ecfdf5; }
+    .task.red{ background:#fef2f2; }
+
+    input[type="checkbox"]{
+      width:22px;
+      height:22px;
+      accent-color:var(--green);
+    }
+
+    .time{
+      min-width:80px;
+      font-weight:800;
+    }
+
+    .label{
+      font-weight:700;
+      flex:1;
+    }
+
+    .legend{
+      margin-top:20px;
+      font-size:14px;
+      color:var(--muted);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="card">
+
+      <h1>Daily checklist for house management</h1>
+      <p class="subtitle"></p>
+
+      <div class="topbar">
+        <div>
+          <span class="badge" id="currentDate"></span>
+          <span class="badge" id="currentTime"></span>
+        </div>
+      </div>
+
+      <div class="status-line">
+        Checklist
+      </div>
+
+      <div class="task-list" id="taskList"></div>
+
+      <div class="legend">
+        Gris = en attente | Vert = fait | Rouge = en retard
+      </div>
+
+    </div>
+  </div>
+
+<script>
+const tasks = [
+  { id:1, time:"09:45", label:"Daily production > 0.7kwh -> dishwasher is started" },
+  { id:2, time:"11:15", label:"Daily production > 0.7kwh -> clothes washer is started" },
+  { id:3, time:"12:30", label:"Daily production > 0.7kwh -> clothes washer is started" },
+  { id:4, time:"12:50", label:"Daily production > 0.7kwh -> dishwasher is started" },
+
+  { id:9, time:"13:00", label:"double check fridge is well closed and all carbohydrates are well hidden in garage and/or closed boxes" },
+
+  { id:5, time:"13:45", label:"Daily production > 0.7kwh -> clothes washer is started" },
+  { id:6, time:"15:00", label:"Happy for free green hour -> clothes washer is started" },
+  { id:7, time:"15:40", label:"happy for free green hour -> dishwasher is started" },
+  { id:8, time:"16:10", label:"happy for free green hour -> clothes washer is started" },
+
+  { id:10, time:"18:00", label:"double check fridge is well closed and all carbohydrates are well hidden in garage and/or closed boxes" }
+];
+
+const taskList = document.getElementById("taskList");
+
+function nowMinutes(){
+  const d = new Date();
+  return d.getHours()*60 + d.getMinutes();
+}
+
+function timeToMinutes(t){
+  const [h,m]=t.split(":");
+  return h*60 + +m;
+}
+
+function renderClock(){
+  const now = new Date();
+  document.getElementById("currentDate").textContent =
+    now.toLocaleDateString("fr-FR");
+
+  document.getElementById("currentTime").textContent =
+    now.toLocaleTimeString("fr-FR");
+}
+
+function renderTasks(){
+  taskList.innerHTML="";
+
+  tasks.forEach(t=>{
+    const row=document.createElement("div");
+    const checked=localStorage.getItem(t.id)==="1";
+
+    let color="gray";
+    if(checked) color="green";
+    else if(nowMinutes()>timeToMinutes(t.time)) color="red";
+
+    row.className="task "+color;
+
+    const cb=document.createElement("input");
+    cb.type="checkbox";
+    cb.checked=checked;
+
+    cb.onchange=()=>{
+      localStorage.setItem(t.id, cb.checked?"1":"0");
+      renderTasks();
+    };
+
+    row.innerHTML += `<div class="time">${t.time}</div>
+                      <div class="label">${t.label}</div>`;
+
+    row.prepend(cb);
+
+    taskList.appendChild(row);
+  });
+}
+
+setInterval(()=>{
+  renderClock();
+  renderTasks();
+},1000);
+
+renderClock();
+renderTasks();
+</script>
+
+</body>
+</html>
