@@ -211,7 +211,7 @@ function checkDailyReset() {
   const m = now.getMinutes();
 
   // Fenêtre de reset : entre 01:00 et 01:59
-  if (h !== 1) return;
+ if (h !== 8 || m !== 20) return;
 
   const todayKey = todayResetTimestamp();
   const lastReset = localStorage.getItem(getResetKey());
