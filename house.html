@@ -153,7 +153,7 @@
       </div>
 
       <div class="status-line">
-        Checklist 
+        Checklist
       </div>
 
       <div class="task-list" id="taskList"></div>
@@ -167,17 +167,17 @@
 
 <script>
 const tasks = [
-  { id:1, time:"09:45", label:"Daily production > 0.7kwh -> dishwasher is started" }, 
-  { id:2, time:"10:50", label:"Daily production > 0.7kwh -> clothes washer is started" },
-  { id:3, time:"12:05", label:"Daily production > 0.7kwh -> clothes washer is started" },
-  { id:4, time:"12:50", label:"Daily production > 0.7kwh -> dishwasher is started" },
+  { id:1,  time:"09:45", label:"Daily production > 0.7kwh -> dishwasher is started" },
+  { id:2,  time:"10:50", label:"Daily production > 0.7kwh -> clothes washer is started" },
+  { id:3,  time:"12:05", label:"Daily production > 0.7kwh -> clothes washer is started" },
+  { id:4,  time:"12:50", label:"Daily production > 0.7kwh -> dishwasher is started" },
 
-  { id:9, time:"13:00", label:"double check fridge is well closed and all carbohydrates are well hidden in garage and/or closed boxes" },
+  { id:9,  time:"13:00", label:"double check fridge is well closed and all carbohydrates are well hidden in garage and/or closed boxes" },
 
-  { id:5, time:"13:45", label:"Daily production > 0.7kwh -> clothes washer is started" },
-  { id:6, time:"15:00", label:"Happy for free green hour -> clothes washer is started" },
-  { id:7, time:"15:40", label:"happy for free green hour -> dishwasher is started" },
-  { id:8, time:"16:10", label:"happy for free green hour -> clothes washer is started" },
+  { id:5,  time:"13:45", label:"Daily production > 0.7kwh -> clothes washer is started" },
+  { id:6,  time:"15:00", label:"Happy for free green hour -> clothes washer is started" },
+  { id:7,  time:"15:40", label:"happy for free green hour -> dishwasher is started" },
+  { id:8,  time:"16:10", label:"happy for free green hour -> clothes washer is started" },
   { id:11, time:"16:45", label:"induction is switched off" },
   { id:12, time:"16:45", label:"oven is switched off" },
   { id:13, time:"16:45", label:"Bubu's room heater is switched off" },
@@ -186,9 +186,45 @@ const tasks = [
   { id:16, time:"16:46", label:"Corridor heater is switched off" },
   { id:17, time:"16:46", label:"Toilet heater is switched off" },
   { id:18, time:"16:46", label:"Shower room clothes heater is switched off" },
-  { id:18, time:"16:58", label:"Set a daily alarm on your phone for 16h58 to double check that all is switched off" },
-  { id:10, time:"18400", label:"Set a daily alarm on your phone for 18h45 to double check fridge is well closed and all carbohydrates are well hidden in garage and/or closed boxes" }
+  { id:19, time:"16:58", label:"Set a daily alarm on your phone for 16h58 to double check that all is switched off" },
+  { id:10, time:"18:45", label:"Set a daily alarm on your phone for 18h45 to double check fridge is well closed and all carbohydrates are well hidden in garage and/or closed boxes" }
 ];
+
+// ─── Réinitialisation automatique à 1h du matin ─────────────────────────────
+// On stocke la date (YYYY-MM-DD) du dernier reset.
+// À chaque tick, si l'heure actuelle est entre 01:00 et 01:59 ET que le reset
+// n'a pas encore été fait aujourd'hui, on vide toutes les cases.
+
+function getResetKey() {
+  return "lastReset";
+}
+
+function todayResetTimestamp() {
+  // Retourne un string "YYYY-MM-DD" représentant aujourd'hui
+  const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function checkDailyReset() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+
+  // Fenêtre de reset : entre 01:00 et 01:59
+  if (h !== 1) return;
+
+  const todayKey = todayResetTimestamp();
+  const lastReset = localStorage.getItem(getResetKey());
+
+  if (lastReset === todayKey) return; // déjà fait aujourd'hui
+
+  // Reset : supprimer toutes les cases cochées
+  tasks.forEach(t => localStorage.removeItem(String(t.id)));
+
+  // Enregistrer la date du reset
+  localStorage.setItem(getResetKey(), todayKey);
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 const taskList = document.getElementById("taskList");
 
@@ -206,7 +242,6 @@ function renderClock(){
   const now = new Date();
   document.getElementById("currentDate").textContent =
     now.toLocaleDateString("fr-FR");
-
   document.getElementById("currentTime").textContent =
     now.toLocaleTimeString("fr-FR");
 }
@@ -214,7 +249,7 @@ function renderClock(){
 function getLabelClass(id){
   if ([1,2,3,4,5].includes(id)) return "blue-text";
   if ([6,7,8].includes(id)) return "green-text";
-  if (id >= 11 && id <= 18) return "purple-text";
+  if (id >= 11 && id <= 19) return "purple-text";
   if ([9,10].includes(id)) return "brown-text";
   return "";
 }
@@ -224,7 +259,7 @@ function renderTasks(){
 
   tasks.forEach(t => {
     const row = document.createElement("div");
-    const checked = localStorage.getItem(t.id) === "1";
+    const checked = localStorage.getItem(String(t.id)) === "1";
 
     let color = "gray";
     if (checked) color = "green";
@@ -237,7 +272,7 @@ function renderTasks(){
     cb.checked = checked;
 
     cb.onchange = () => {
-      localStorage.setItem(t.id, cb.checked ? "1" : "0");
+      localStorage.setItem(String(t.id), cb.checked ? "1" : "0");
       renderTasks();
     };
 
@@ -252,10 +287,12 @@ function renderTasks(){
 }
 
 setInterval(() => {
+  checkDailyReset();
   renderClock();
   renderTasks();
 }, 1000);
 
+checkDailyReset();
 renderClock();
 renderTasks();
 </script>
